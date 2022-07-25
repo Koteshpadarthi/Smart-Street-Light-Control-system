@@ -1,0 +1,136 @@
+#include <ESP8266WiFi.h>;
+#include <WiFiClient.h>;
+#include <ThingSpeak.h>;
+
+const char* ssid = "Galaxy a51";
+const char* password = "32799723";
+
+WiFiClient client;
+
+unsigned long ChannelNumber = 1735393;
+const char * WriteAPIKey = "MGID82EQSAIHBOH1";
+const char * ReadAPIKey = "EC1ZF471JVPQN8Z2";
+
+int led_1;
+int led_2;
+int led_3;
+
+int ir1 = D0;
+int led1 = D5;
+
+int ir2 = D1;
+int led2 = D6;
+
+int ir3 = D2;
+int led3 = D7;
+
+int ldr = A0;
+int val =0;
+
+void setup() {
+  Serial.begin(9600);
+  delay(10);
+  pinMode(ir1,INPUT);
+  pinMode(led1,OUTPUT);
+
+  pinMode(ir2,INPUT);
+  pinMode(led2,OUTPUT);
+
+  pinMode(ir3,INPUT);
+  pinMode(led3,OUTPUT);
+
+  pinMode(ldr,INPUT);
+
+  WiFi.begin(ssid, password);
+  ThingSpeak.begin(client);
+}
+
+void loop() {
+  int s1 = digitalRead(ir1);
+  int s2 = digitalRead(ir2);
+  int s3 = digitalRead(ir3);
+  s3 = not(s3);
+
+  val = analogRead(ldr);
+
+  Serial.print(s1);
+  Serial.print(":");
+  Serial.print(s2);
+  Serial.print(":");
+  Serial.print(s3);
+  Serial.print("  ");
+  Serial.println(val);
+  if(val<500)
+  {
+    if(s1==1)
+    {
+      digitalWrite(led1,LOW);
+    }
+    else
+    {
+      digitalWrite(led1,HIGH);
+    }
+    if(s2==1)
+    {
+      digitalWrite(led2,LOW);
+    }
+    else
+    {
+      digitalWrite(led2,HIGH);
+    }
+
+    if(s3==0)
+    {
+      digitalWrite(led3,LOW);
+    }
+    else
+    {
+      digitalWrite(led3,HIGH);
+    }
+  }
+  else
+  {
+    digitalWrite(led1,LOW);
+    digitalWrite(led2,LOW);
+    digitalWrite(led3,LOW);
+  }
+
+  ThingSpeak.writeField(ChannelNumber, 1,val, WriteAPIKey);
+  ThingSpeak.writeField(ChannelNumber, 2,s1, WriteAPIKey);
+  ThingSpeak.writeField(ChannelNumber, 3,s2, WriteAPIKey);
+  ThingSpeak.writeField(ChannelNumber, 4,s3, WriteAPIKey);
+  ThingSpeak.writeField(ChannelNumber, 5,led1, WriteAPIKey);
+  ThingSpeak.writeField(ChannelNumber, 6,led2, WriteAPIKey);
+  ThingSpeak.writeField(ChannelNumber, 7,led3, WriteAPIKey);
+
+  led_1 = ThingSpeak.readIntField(ChannelNumber, 5, ReadAPIKey);
+  led_2 = ThingSpeak.readIntField(ChannelNumber, 6, ReadAPIKey);
+  led_3 = ThingSpeak.readIntField(ChannelNumber, 7, ReadAPIKey);
+
+  if(led_1==1)
+  {
+    digitalWrite(led1,HIGH);
+  }
+  else
+  {
+    digitalWrite(led1,LOW);
+  }
+
+  if(led_2==1)
+  {
+    digitalWrite(led2,HIGH);
+  }
+  else
+  {
+    digitalWrite(led2,LOW);
+  }
+
+  if(led_3==1)
+  {
+    digitalWrite(led3,HIGH);
+  }
+  else
+  {
+    digitalWrite(led3,LOW);
+  }
+}
